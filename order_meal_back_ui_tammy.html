@@ -459,8 +459,8 @@
                 font-size: 0.85rem;
                 font-weight: 600;
             }
-            td:nth-of-type(1):before { content: "日期"; }
-            td:nth-of-type(2):before { content: "編號"; }
+            td:nth-of-type(1):before { content: "編號"; }
+            td:nth-of-type(2):before { content: "日期"; }
             td:nth-of-type(3):before { content: "姓名"; }
             td:nth-of-type(4):before { content: "餐點 (EAT)"; }
             td:nth-of-type(5):before { content: "飲料 (DRINK)"; }
@@ -512,6 +512,7 @@
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <label for="dateFilter" style="font-size: 0.95rem; font-weight: 500;">用餐日期:</label>
                 <input type="text" id="dateFilter" class="form-control" placeholder="選擇日期" style="width: 140px; padding: 0.5rem 1rem; border-radius: 999px; cursor: pointer; text-align: center;">
+                <button id="confirmDateBtn" class="btn btn-primary" style="border-radius: 999px; padding: 0.5rem 1rem;">確認</button>
                 <button id="allDatesBtn" class="btn btn-secondary" style="border-radius: 999px; padding: 0.5rem 1rem;">全部</button>
             </div>
             <div class="search-box">
@@ -534,8 +535,8 @@
             <table>
                 <thead>
                     <tr>
-                        <th>日期</th>
                         <th>編號</th>
+                        <th>日期</th>
                         <th>姓名</th>
                         <th>餐點 (EAT)</th>
                         <th>飲料 (DRINK)</th>
@@ -637,10 +638,7 @@
             // Set default date filter with flatpickr
             datePicker = flatpickr("#dateFilter", {
                 defaultDate: "today",
-                locale: "zh_tw",
-                onChange: function(selectedDates, dateStr, instance) {
-                    renderTable(document.getElementById('searchInput').value);
-                }
+                locale: "zh_tw"
             });
             
             const savedOrders = localStorage.getItem('orderMealData_v3');
@@ -720,8 +718,8 @@
                     const tr = document.createElement('tr');
                     const mealStyle = getMealColor(order.meal);
                     tr.innerHTML = `
-                        <td>${order.date || '-'}</td>
                         <td>${order.id}</td>
+                        <td>${order.date || '-'}</td>
                         <td><div style="font-weight: 500;">${order.name}</div></td>
                         <td><span class="meal-tag" style="${mealStyle}">${order.meal}</span></td>
                         <td>${order.drink || '<span style="color: var(--text-muted)">-</span>'}</td>
@@ -745,6 +743,9 @@
         function setupEventListeners() {
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 renderTable(e.target.value);
+            });
+            document.getElementById('confirmDateBtn').addEventListener('click', () => {
+                renderTable(document.getElementById('searchInput').value);
             });
             document.getElementById('allDatesBtn').addEventListener('click', () => {
                 datePicker.clear();
