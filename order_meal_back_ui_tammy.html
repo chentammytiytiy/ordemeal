@@ -447,29 +447,54 @@
     </div>
 
     <script>
-        // Mock Data Initialization based on the provided sheet
-        let orders = [
-            { id: 1, name: '高念平', status: 'OK', meal: '原味椒鹽炸雞霸氣會議餐盒', drink: '原片初露青茶         無糖微冰', notes: '冬天不洗澡也要洗衣服吧' },
-            { id: 2, name: '游國楷', status: 'OK', meal: '油蔥舒肥雞霸氣會議餐盒', drink: '桂香青檸粉粿       無糖微冰', notes: '' },
-            { id: 3, name: '謝楷評', status: 'OK', meal: '招牌椒麻豬排霸氣會議餐盒', drink: '原片初露青茶         無糖微冰', notes: '' },
-            { id: 4, name: '陳春惠', status: 'OK', meal: '原味椒鹽炸雞霸氣會議餐盒', drink: '原片初露青茶         無糖微冰', notes: '' },
-            { id: 5, name: '薛仁奇', status: 'OK', meal: '油蔥舒肥雞霸氣會議餐盒', drink: '原片初露青茶         無糖微冰', notes: '' },
-            { id: 6, name: '李佳馨', status: 'OK', meal: '素食', drink: '原片初露青茶         無糖微冰', notes: '都AI' }
-        ];
+        // 【重要】請將下方的 GAS_URL 替換為您部署的 Google Apps Script (Web App) 網址
+        const GAS_URL = ''; 
 
-        let nextId = 7;
+        let orders = [];
 
-        // Render Table
+        // 讀取遠端資料
+        async function fetchOrders() {
+            const tbody = document.getElementById('tableBody');
+            
+            if (!GAS_URL) {
+                console.warn('請設定 GAS_URL。目前進入測試模式');
+                orders = [
+                    { id: '1', name: '高念平', status: 'OK', meal: '原味椒鹽炸雞霸氣會議餐盒', drink: '原片初露青茶         無糖微冰', notes: '冬天不洗澡也要洗衣服吧' },
+                    { id: '2', name: '游國楷', status: 'OK', meal: '油蔥舒肥雞霸氣會議餐盒', drink: '桂香青檸粉粿       無糖微冰', notes: '' }
+                ];
+                renderTable();
+                return;
+            }
+
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">資料同步中，請稍候...</td></tr>`;
+            
+            try {
+                const response = await fetch(GAS_URL + '?action=read');
+                const result = await response.json();
+                if (result.status === 'success') {
+                    orders = result.data;
+                    renderTable();
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 40px;">讀取失敗：${result.message}</td></tr>`;
+                    alert('資料讀取失敗：' + result.message);
+                }
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 40px;">網路錯誤或尚未設定 CORS</td></tr>`;
+            }
+        }
+
+        // 呈現表格
         function renderTable(data = orders) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
             if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">找不到相符的資料</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">目前尚無訂單資料</td></tr>`;
                 return;
             }
 
-            data.forEach((order, index) => {
+            data.forEach((order) => {
                 const statusBadge = order.status === 'OK' ? 'badge-success' : 'badge-warning';
                 
                 const tr = document.createElement('tr');
@@ -483,10 +508,10 @@
                         ${order.notes || '-'}
                     </td>
                     <td class="action-cell">
-                        <button class="btn-icon" onclick="editOrder(${order.id})" title="編輯">
+                        <button class="btn-icon" onclick="editOrder('${order.id}')" title="編輯">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
-                        <button class="btn-icon delete" onclick="deleteOrder(${order.id})" title="刪除">
+                        <button class="btn-icon delete" onclick="deleteOrder('${order.id}')" title="刪除">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     </td>
@@ -495,14 +520,14 @@
             });
         }
 
-        // Search functionality
+        // 搜尋功能
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
-            const filtered = orders.filter(order => order.name.toLowerCase().includes(term));
+            const filtered = orders.filter(order => (order.name || '').toLowerCase().includes(term));
             renderTable(filtered);
         });
 
-        // Modal Management
+        // 彈出視窗管理
         const modal = document.getElementById('modalOverlay');
         const form = document.getElementById('orderForm');
 
@@ -518,7 +543,8 @@
             setTimeout(() => form.reset(), 300);
         }
 
-        function saveOrder() {
+        // 新增與更新訂單至 GAS
+        async function saveOrder() {
             const id = document.getElementById('editId').value;
             const name = document.getElementById('empName').value.trim();
             const status = document.getElementById('status').value;
@@ -531,28 +557,50 @@
                 return;
             }
 
-            if (id) {
-                // Edit
-                const index = orders.findIndex(o => o.id == id);
-                if (index > -1) {
-                    orders[index] = { ...orders[index], name, status, meal, drink, notes };
-                }
-            } else {
-                // Add
-                orders.push({
-                    id: nextId++,
-                    name, status, meal, drink, notes
-                });
+            if (!GAS_URL) {
+                alert('目前為測試模式，請於原始碼中設定 GAS_URL 以同步到 Google Sheets！');
+                closeModal();
+                return;
             }
 
-            renderTable();
-            closeModal();
-            // Re-apply search if exists
-            document.getElementById('searchInput').dispatchEvent(new Event('input'));
+            const payload = {
+                action: id ? 'update' : 'create',
+                id: id,
+                data: { name, status, meal, drink, notes }
+            };
+
+            try {
+                const submitBtn = event.target;
+                const originalText = submitBtn.innerText;
+                submitBtn.innerText = '儲存中...';
+                submitBtn.disabled = true;
+
+                const res = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await res.json();
+                
+                submitBtn.innerText = originalText;
+                submitBtn.disabled = false;
+
+                if (result.status === 'success') {
+                    closeModal();
+                    await fetchOrders(); // 重新載入最新資料
+                    // 若搜尋框有字，觸發重新過濾
+                    document.getElementById('searchInput').dispatchEvent(new Event('input'));
+                } else {
+                    alert('儲存失敗：' + result.message);
+                }
+            } catch(e) {
+                alert('系統錯誤，請確認 GAS_URL 是否正確。');
+            }
         }
 
+        // 彈出編輯視窗
         function editOrder(id) {
-            const order = orders.find(o => o.id == id);
+            const order = orders.find(o => String(o.id) === String(id));
             if (!order) return;
 
             document.getElementById('editId').value = order.id;
@@ -560,29 +608,45 @@
             document.getElementById('empName').value = order.name;
             document.getElementById('status').value = order.status;
             
-            // set meal
             const mealOpts = document.getElementById('mainMeal').options;
-            for(let opt of mealOpts) if(order.meal && order.meal.includes(opt.value)) document.getElementById('mainMeal').value = opt.value;
+            for(let opt of mealOpts) if(order.meal===opt.value) document.getElementById('mainMeal').value = opt.value;
             
-            // set drink
             const drinkOpts = document.getElementById('drink').options;
-            for(let opt of drinkOpts) if(order.drink && order.drink.includes(opt.value)) document.getElementById('drink').value = opt.value;
+            for(let opt of drinkOpts) if(order.drink===opt.value) document.getElementById('drink').value = opt.value;
             
             document.getElementById('notes').value = order.notes;
 
             modal.classList.add('active');
         }
 
-        function deleteOrder(id) {
-            if (confirm('確定要刪除這筆訂單嗎？')) {
-                orders = orders.filter(o => o.id != id);
-                renderTable();
-                document.getElementById('searchInput').dispatchEvent(new Event('input'));
+        // 刪除訂單透過 GAS
+        async function deleteOrder(id) {
+            if (!confirm('確定要刪除這筆訂單嗎？（此動作將直接刪除 Google Sheet 上的資料）')) return;
+
+            if (!GAS_URL) {
+                alert('目前為測試模式，請於原始碼中設定 GAS_URL 以同步到 Google Sheets！');
+                return;
+            }
+
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'delete', id: id })
+                });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    await fetchOrders();
+                    document.getElementById('searchInput').dispatchEvent(new Event('input'));
+                } else {
+                    alert('刪除失敗：' + result.message);
+                }
+            } catch(e) {
+                alert('系統錯誤，請確認 GAS_URL 是否正確。');
             }
         }
 
-        // Initial Render
-        renderTable();
+        // 初始化
+        fetchOrders();
     </script>
 </body>
 </html>
