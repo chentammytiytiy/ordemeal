@@ -531,6 +531,12 @@
                         點餐系統
                     </a>
                 </li>
+                <li>
+                    <a href="order_meal_menu_tammy.html" class="menu-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                        品項維護
+                    </a>
+                </li>
             </ul>
         </nav>
 
@@ -746,19 +752,24 @@
             return 'background: rgba(99, 102, 241, 0.2); color: #818cf8;';
         }
 
-        function updateDataLists() {
+        function getMenuItems() {
             const defaultMeals = ["1.總匯特餐", "2.雞腿特餐", "3.排骨特餐", "4.叉燒特餐", "5.素食"];
             const defaultDrinks = ["A.青四季春無糖微冰", "B.紅柚翡翠微糖微冰", "C.珍珠奶茶微糖微冰", "無"];
-            const mealSet = new Set(defaultMeals);
-            const drinkSet = new Set(defaultDrinks);
-            
-            orders.forEach(o => {
-                if (o.meal) mealSet.add(o.meal);
-                if (o.drink) drinkSet.add(o.drink);
-            });
-            
-            document.getElementById('mealOptions').innerHTML = Array.from(mealSet).map(m => `<option value="${m}">`).join('');
-            document.getElementById('drinkOptions').innerHTML = Array.from(drinkSet).map(d => `<option value="${d}">`).join('');
+            const saved = localStorage.getItem('orderMealMenuItems_v1');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return { meals: parsed.meals || defaultMeals, drinks: parsed.drinks || defaultDrinks };
+            }
+            // Initialize defaults into shared key if not yet set
+            const initial = { meals: defaultMeals, drinks: defaultDrinks };
+            localStorage.setItem('orderMealMenuItems_v1', JSON.stringify(initial));
+            return initial;
+        }
+
+        function updateDataLists() {
+            const { meals, drinks } = getMenuItems();
+            document.getElementById('mealOptions').innerHTML = meals.map(m => `<option value="${m}">`).join('');
+            document.getElementById('drinkOptions').innerHTML = drinks.map(d => `<option value="${d}">`).join('');
         }
 
         // Render Table
