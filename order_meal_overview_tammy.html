@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>總覽 - 點餐系統後台管理</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #10b981;
+            --secondary-hover: #059669;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --modal-bg: rgba(15, 23, 42, 0.95);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.15), transparent 25%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Dashboard Layout */
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--border);
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #818cf8, #34d399);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            flex: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .menu-item.active {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            border-right: 3px solid var(--primary);
+        }
+
+        .menu-item svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #818cf8, #34d399);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .stat-icon.primary { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        .stat-icon.secondary { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .stat-icon.warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+        .stat-content h3 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-content .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Two columns for detailed tables */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .table-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-card h3 {
+            padding: 1.25rem 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border);
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .table-card h3 svg {
+            color: var(--primary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+
+        tbody tr {
+            transition: var(--transition);
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .badge {
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding: 1rem;
+            }
+            .sidebar-menu {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            .sidebar-menu li {
+                margin: 0;
+            }
+            .main-content {
+                height: auto;
+                overflow-y: visible;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-layout">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>點餐系統後台</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="order_meal_overview_tammy.html" class="menu-item active">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        總覽
+                    </a>
+                </li>
+                <li>
+                    <a href="order_meal_back_ui_tammy.html" class="menu-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        點餐系統
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <div class="container">
+                <header class="header">
+                    <h1>營業總覽</h1>
+                    <div class="user-profile">
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">報表即時更新中...</span>
+                    </div>
+                </header>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        </div>
+                        <div class="stat-content">
+                            <h3>總點餐人數</h3>
+                            <div class="value" id="totalPeople">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+                        </div>
+                        <div class="stat-content">
+                            <h3>總主餐數量</h3>
+                            <div class="value" id="totalMeals">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"></path><path d="M12 18v4"></path><path d="M12 18s4-3.5 4-8.5v-1.5a4 4 0 0 0-8 0V9.5C8 14.5 12 18 12 18z"></path><path d="M15 2H9"></path></svg>
+                        </div>
+                        <div class="stat-content">
+                            <h3>總飲料數量</h3>
+                            <div class="value" id="totalDrinks">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-grid">
+                    <div class="table-card">
+                        <h3>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            各餐點數量統計
+                        </h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>餐點名稱</th>
+                                    <th style="text-align: right;">數量</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mealTableBody">
+                                <!-- Computed meals here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="table-card">
+                        <h3>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                            各飲料數量統計
+                        </h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>飲料名稱</th>
+                                    <th style="text-align: right;">數量</th>
+                                </tr>
+                            </thead>
+                            <tbody id="drinkTableBody">
+                                <!-- Computed drinks here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Initialize dashboard statistics
+        function initDashboard() {
+            const savedOrders = localStorage.getItem('orderMealData_v2');
+            let orders = [];
+            
+            if (savedOrders) {
+                orders = JSON.parse(savedOrders);
+            }
+
+            // Calculations
+            const totalPeople = orders.length;
+            let totalMealsCount = 0;
+            let totalDrinksCount = 0;
+            
+            const mealCounts = {};
+            const drinkCounts = {};
+
+            orders.forEach(order => {
+                // Meals
+                if (order.meal && order.meal.trim() !== '') {
+                    totalMealsCount++;
+                    mealCounts[order.meal] = (mealCounts[order.meal] || 0) + 1;
+                }
+                
+                // Drinks
+                if (order.drink && order.drink.trim() !== '' && order.drink !== '無') {
+                    totalDrinksCount++;
+                    drinkCounts[order.drink] = (drinkCounts[order.drink] || 0) + 1;
+                }
+            });
+
+            // Update DOM Top Stats
+            document.getElementById('totalPeople').textContent = totalPeople;
+            document.getElementById('totalMeals').textContent = totalMealsCount;
+            document.getElementById('totalDrinks').textContent = totalDrinksCount;
+
+            // Render Meal Table
+            const mealTbody = document.getElementById('mealTableBody');
+            const sortedMeals = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]);
+            
+            if (sortedMeals.length === 0) {
+                mealTbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color: var(--text-muted)">尚無餐點資料</td></tr>';
+            } else {
+                mealTbody.innerHTML = sortedMeals.map(([item, count]) => `
+                    <tr>
+                        <td><div style="font-weight: 500;">${item}</div></td>
+                        <td style="text-align: right;"><span class="badge">${count}</span></td>
+                    </tr>
+                `).join('');
+            }
+
+            // Render Drink Table
+            const drinkTbody = document.getElementById('drinkTableBody');
+            const sortedDrinks = Object.entries(drinkCounts).sort((a, b) => b[1] - a[1]);
+            
+            if (sortedDrinks.length === 0) {
+                drinkTbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color: var(--text-muted)">尚無飲料資料</td></tr>';
+            } else {
+                drinkTbody.innerHTML = sortedDrinks.map(([item, count]) => `
+                    <tr>
+                        <td><div style="font-weight: 500;">${item}</div></td>
+                        <td style="text-align: right;"><span class="badge">${count}</span></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // Run when ready
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
