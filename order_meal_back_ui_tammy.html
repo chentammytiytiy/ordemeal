@@ -564,7 +564,10 @@
             </div>
             <form id="orderForm">
                 <input type="hidden" id="orderId">
-                <input type="hidden" id="orderDate">
+                <div class="form-group">
+                    <label for="orderDate">用餐日期</label>
+                    <input type="text" id="orderDate" class="form-control" placeholder="選擇日期" required style="cursor: pointer; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border);">
+                </div>
                 <div class="form-group">
                     <label for="name">姓名</label>
                     <input type="text" id="name" class="form-control" required placeholder="請輸入姓名">
@@ -632,11 +635,17 @@
         let orders = [];
         let nextId = 1;
         let datePicker;
+        let modalDatePicker;
 
         // Initialize state
         async function init() {
             // Set default date filter with flatpickr
             datePicker = flatpickr("#dateFilter", {
+                defaultDate: "today",
+                locale: "zh_tw"
+            });
+            
+            modalDatePicker = flatpickr("#orderDate", {
                 defaultDate: "today",
                 locale: "zh_tw"
             });
@@ -809,7 +818,7 @@
                 document.getElementById('orderId').value = '';
                 // Default orderDate to selected date filter or today
                 const filterDate = document.getElementById('dateFilter').value;
-                document.getElementById('orderDate').value = filterDate || todayDate;
+                modalDatePicker.setDate(filterDate || todayDate);
                 
                 customMealGroup.style.display = 'none';
                 customDrinkGroup.style.display = 'none';
@@ -926,7 +935,7 @@
             if (!order) return;
 
             document.getElementById('orderId').value = order.id;
-            document.getElementById('orderDate').value = order.date || todayDate;
+            modalDatePicker.setDate(order.date || todayDate);
             document.getElementById('name').value = order.name;
             
             // Set Meal
