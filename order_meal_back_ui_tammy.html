@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>點餐系統後台管理</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     <style>
         :root {
             --primary: #6366f1;
@@ -509,7 +511,7 @@
         <div class="toolbar">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <label for="dateFilter" style="font-size: 0.95rem; font-weight: 500;">用餐日期:</label>
-                <input type="date" id="dateFilter" class="form-control" style="width: auto; padding: 0.5rem 1rem; border-radius: 999px;">
+                <input type="text" id="dateFilter" class="form-control" placeholder="選擇日期" style="width: 140px; padding: 0.5rem 1rem; border-radius: 999px; cursor: pointer; text-align: center;">
                 <button id="allDatesBtn" class="btn btn-secondary" style="border-radius: 999px; padding: 0.5rem 1rem;">全部</button>
             </div>
             <div class="search-box">
@@ -561,10 +563,7 @@
             </div>
             <form id="orderForm">
                 <input type="hidden" id="orderId">
-                <div class="form-group">
-                    <label for="orderDate">用餐日期</label>
-                    <input type="date" id="orderDate" class="form-control" required>
-                </div>
+                <input type="hidden" id="orderDate">
                 <div class="form-group">
                     <label for="name">姓名</label>
                     <input type="text" id="name" class="form-control" required placeholder="請輸入姓名">
@@ -609,6 +608,8 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/zh-tw.js"></script>
     <script>
         const todayDate = new Date().toLocaleDateString('en-CA'); // 'yyyy-mm-dd' format locally
         // Initial Mock Data from Google Sheet
@@ -629,11 +630,18 @@
         // State Management
         let orders = [];
         let nextId = 1;
+        let datePicker;
 
         // Initialize state
         async function init() {
-            // Set default date filter
-            document.getElementById('dateFilter').value = todayDate;
+            // Set default date filter with flatpickr
+            datePicker = flatpickr("#dateFilter", {
+                defaultDate: "today",
+                locale: "zh_tw",
+                onChange: function(selectedDates, dateStr, instance) {
+                    renderTable(document.getElementById('searchInput').value);
+                }
+            });
             
             const savedOrders = localStorage.getItem('orderMealData_v3');
             if (savedOrders) {
@@ -738,11 +746,8 @@
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 renderTable(e.target.value);
             });
-            document.getElementById('dateFilter').addEventListener('change', () => {
-                renderTable(document.getElementById('searchInput').value);
-            });
             document.getElementById('allDatesBtn').addEventListener('click', () => {
-                document.getElementById('dateFilter').value = '';
+                datePicker.clear();
                 renderTable(document.getElementById('searchInput').value);
             });
         }

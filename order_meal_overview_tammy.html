@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>總覽 - 點餐系統後台管理</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     <style>
         :root {
             --primary: #6366f1;
@@ -325,7 +327,7 @@
                     <h1>營業總覽</h1>
                     <div class="date-selector" style="display: flex; align-items: center; gap: 0.75rem;">
                         <label for="dateFilter" style="color: var(--text-muted); font-weight: 500;">選擇日期：</label>
-                        <input type="date" id="dateFilter" style="padding: 0.5rem 1rem; border-radius: 999px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: white; outline: none; font-family: inherit;">
+                        <input type="text" id="dateFilter" placeholder="選擇日期" style="width: 140px; text-align: center; padding: 0.5rem 1rem; border-radius: 999px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: white; outline: none; font-family: inherit; cursor: pointer;">
                         <button id="allDatesBtn" style="padding: 0.5rem 1rem; border-radius: 999px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s; font-family: inherit;">全部日期</button>
                     </div>
                 </header>
@@ -402,6 +404,8 @@
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/zh-tw.js"></script>
     <script>
         // 設定與點餐系統相同的 GAS API 網址，確保抓到最新資料
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwaWwvuxfXH8z2ARI-x4JMmSpRPnG_m8PEyGqpen6e0Q9_U8B85SJdIRV3UGdj8bD-T/exec';
@@ -473,11 +477,16 @@
             }
         }
 
+        let datePicker;
+
         // Initialize dashboard statistics
         async function initDashboard() {
-            // Set default date to today
-            const todayDate = new Date().toLocaleDateString('en-CA');
-            document.getElementById('dateFilter').value = todayDate;
+            // Set default date to today using flatpickr
+            datePicker = flatpickr("#dateFilter", {
+                defaultDate: "today",
+                locale: "zh_tw",
+                onChange: renderStats
+            });
             
             // 優先顯示本地暫存資料
             const savedOrders = localStorage.getItem('orderMealData_v3');
@@ -503,9 +512,8 @@
             }
             
             // Event Listeners for date filtering
-            document.getElementById('dateFilter').addEventListener('change', renderStats);
             document.getElementById('allDatesBtn').addEventListener('click', () => {
-                document.getElementById('dateFilter').value = '';
+                datePicker.clear();
                 renderStats();
             });
             
