@@ -503,10 +503,10 @@
                     const data = await response.json();
                     if (data && data.status === 'success' && Array.isArray(data.data)) {
                         globalOrders = data.data.map(o => {
-                            let d = '';
+                            let d = todayDate; // Fallback to todayDate instead of empty string
                             if (o.date) {
                                 const parsed = new Date(o.date);
-                                if (!isNaN(parsed)) {
+                                if (!isNaN(parsed) && parsed.getFullYear() > 2000) {
                                     d = parsed.getFullYear() + '-' + String(parsed.getMonth() + 1).padStart(2, '0') + '-' + String(parsed.getDate()).padStart(2, '0');
                                 } else {
                                     d = String(o.date).replace(/\//g, '-').split('T')[0];
