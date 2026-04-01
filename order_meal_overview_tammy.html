@@ -502,7 +502,18 @@
                     const response = await fetch(`${GAS_URL}?action=read`);
                     const data = await response.json();
                     if (data && data.status === 'success' && Array.isArray(data.data)) {
-                        globalOrders = data.data;
+                        globalOrders = data.data.map(o => {
+                            let d = '';
+                            if (o.date) {
+                                const parsed = new Date(o.date);
+                                if (!isNaN(parsed)) {
+                                    d = parsed.getFullYear() + '-' + String(parsed.getMonth() + 1).padStart(2, '0') + '-' + String(parsed.getDate()).padStart(2, '0');
+                                } else {
+                                    d = String(o.date).replace(/\//g, '-').split('T')[0];
+                                }
+                            }
+                            return { ...o, date: d };
+                        });
                         localStorage.setItem('orderMealData_v3', JSON.stringify(globalOrders));
                         renderStats(); // 重繪 UI 最新資料
                     }
