@@ -321,10 +321,12 @@
 
         <main class="main-content">
             <div class="container">
-                <header class="header">
+                <header class="header" style="flex-wrap: wrap; gap: 1rem;">
                     <h1>營業總覽</h1>
-                    <div class="user-profile">
-                        <span style="color: var(--text-muted); font-size: 0.9rem;">報表即時更新中...</span>
+                    <div class="date-selector" style="display: flex; align-items: center; gap: 0.75rem;">
+                        <label for="dateFilter" style="color: var(--text-muted); font-weight: 500;">選擇日期：</label>
+                        <input type="date" id="dateFilter" style="padding: 0.5rem 1rem; border-radius: 999px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: white; outline: none; font-family: inherit;">
+                        <button id="allDatesBtn" style="padding: 0.5rem 1rem; border-radius: 999px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s; font-family: inherit;">全部日期</button>
                     </div>
                 </header>
 
@@ -404,8 +406,15 @@
         // 設定與點餐系統相同的 GAS API 網址，確保抓到最新資料
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwaWwvuxfXH8z2ARI-x4JMmSpRPnG_m8PEyGqpen6e0Q9_U8B85SJdIRV3UGdj8bD-T/exec';
 
+        let globalOrders = [];
+
         // 獨立出渲染邏輯
-        function renderStats(orders) {
+        function renderStats() {
+            const selectedDate = document.getElementById('dateFilter').value;
+            const orders = selectedDate 
+                ? globalOrders.filter(o => o.date === selectedDate)
+                : globalOrders;
+
             // Calculations
             const totalPeople = orders.length;
             let totalMealsCount = 0;
@@ -466,13 +475,16 @@
 
         // Initialize dashboard statistics
         async function initDashboard() {
+            // Set default date to today
+            const todayDate = new Date().toLocaleDateString('en-CA');
+            document.getElementById('dateFilter').value = todayDate;
+            
             // 優先顯示本地暫存資料
-            const savedOrders = localStorage.getItem('orderMealData_v2');
-            let orders = [];
+            const savedOrders = localStorage.getItem('orderMealData_v3');
             
             if (savedOrders) {
-                orders = JSON.parse(savedOrders);
-                renderStats(orders);
+                globalOrders = JSON.parse(savedOrders);
+                renderStats();
             }
 
             // 若有設定 GAS_URL，則嘗試從遠端重新拉取最新資料更新畫面
@@ -481,14 +493,26 @@
                     const response = await fetch(`${GAS_URL}?action=read`);
                     const data = await response.json();
                     if (data && data.status === 'success' && Array.isArray(data.data)) {
-                        orders = data.data;
-                        localStorage.setItem('orderMealData_v2', JSON.stringify(orders));
-                        renderStats(orders); // 重繪 UI 最新資料
+                        globalOrders = data.data;
+                        localStorage.setItem('orderMealData_v3', JSON.stringify(globalOrders));
+                        renderStats(); // 重繪 UI 最新資料
                     }
                 } catch (error) {
                     console.error('從 GAS 同步資料失敗:', error);
                 }
             }
+            
+            // Event Listeners for date filtering
+            document.getElementById('dateFilter').addEventListener('change', renderStats);
+            document.getElementById('allDatesBtn').addEventListener('click', () => {
+                document.getElementById('dateFilter').value = '';
+                renderStats();
+            });
+            
+            // Enhance button hover locally
+            const allBtn = document.getElementById('allDatesBtn');
+            allBtn.addEventListener('mouseenter', () => allBtn.style.background = 'rgba(255,255,255,0.2)');
+            allBtn.addEventListener('mouseleave', () => allBtn.style.background = 'rgba(255,255,255,0.1)');
         }
 
         // Run when ready

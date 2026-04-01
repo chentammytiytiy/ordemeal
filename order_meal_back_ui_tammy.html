@@ -69,6 +69,7 @@
             font-weight: 700;
             background: linear-gradient(to right, #818cf8, #34d399);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -138,6 +139,7 @@
             font-weight: 700;
             background: linear-gradient(to right, #818cf8, #34d399);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -455,11 +457,21 @@
                 font-size: 0.85rem;
                 font-weight: 600;
             }
-            td:nth-of-type(1):before { content: "編號"; }
-            td:nth-of-type(2):before { content: "姓名"; }
-            td:nth-of-type(3):before { content: "餐點 (EAT)"; }
-            td:nth-of-type(4):before { content: "飲料 (DRINK)"; }
-            td:nth-of-type(5):before { content: "操作"; }
+            td:nth-of-type(1):before { content: "日期"; }
+            td:nth-of-type(2):before { content: "編號"; }
+            td:nth-of-type(3):before { content: "姓名"; }
+            td:nth-of-type(4):before { content: "餐點 (EAT)"; }
+            td:nth-of-type(5):before { content: "飲料 (DRINK)"; }
+            td:nth-of-type(6):before { content: "操作"; }
+        }
+
+        /* Tags */
+        .meal-tag {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
         }
     </style>
 </head>
@@ -495,6 +507,11 @@
         </header>
 
         <div class="toolbar">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <label for="dateFilter" style="font-size: 0.95rem; font-weight: 500;">用餐日期:</label>
+                <input type="date" id="dateFilter" class="form-control" style="width: auto; padding: 0.5rem 1rem; border-radius: 999px;">
+                <button id="allDatesBtn" class="btn btn-secondary" style="border-radius: 999px; padding: 0.5rem 1rem;">全部</button>
+            </div>
             <div class="search-box">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
@@ -515,6 +532,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th>日期</th>
                         <th>編號</th>
                         <th>姓名</th>
                         <th>餐點 (EAT)</th>
@@ -543,6 +561,10 @@
             </div>
             <form id="orderForm">
                 <input type="hidden" id="orderId">
+                <div class="form-group">
+                    <label for="orderDate">用餐日期</label>
+                    <input type="date" id="orderDate" class="form-control" required>
+                </div>
                 <div class="form-group">
                     <label for="name">姓名</label>
                     <input type="text" id="name" class="form-control" required placeholder="請輸入姓名">
@@ -580,6 +602,7 @@
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+                    <button type="button" class="btn btn-secondary" id="saveAndContinueBtn" style="border: 1px solid var(--primary); color: #fff;">儲存並新增下一筆</button>
                     <button type="submit" class="btn btn-primary" id="saveBtn">儲存</button>
                 </div>
             </form>
@@ -587,16 +610,17 @@
     </div>
 
     <script>
+        const todayDate = new Date().toLocaleDateString('en-CA'); // 'yyyy-mm-dd' format locally
         // Initial Mock Data from Google Sheet
         const initialData = [
-            { id: 1, name: "高念平", meal: "3.排骨特餐", drink: "A.青四季春無糖微冰" },
-            { id: 2, name: "游國楷", meal: "3.排骨特餐", drink: "C.珍珠奶茶微糖微冰" },
-            { id: 3, name: "謝楷評", meal: "2.雞腿特餐", drink: "B.紅柚翡翠微糖微冰" },
-            { id: 4, name: "陳春惠", meal: "2.雞腿特餐", drink: "B.紅柚翡翠微糖微冰" },
-            { id: 5, name: "薛仁奇", meal: "4.叉燒特餐", drink: "B.紅柚翡翠微糖微冰" },
-            { id: 6, name: "劉道鈞", meal: "3.排骨特餐", drink: "C.珍珠奶茶微糖微冰" },
-            { id: 7, name: "蔡恩傑", meal: "1.總匯特餐", drink: "B.紅柚翡翠微糖微冰" },
-            { id: 8, name: "李國源", meal: "5.素食", drink: "A.青四季春無糖微冰" }
+            { id: 1, date: todayDate, name: "高念平", meal: "3.排骨特餐", drink: "A.青四季春無糖微冰" },
+            { id: 2, date: todayDate, name: "游國楷", meal: "3.排骨特餐", drink: "C.珍珠奶茶微糖微冰" },
+            { id: 3, date: todayDate, name: "謝楷評", meal: "2.雞腿特餐", drink: "B.紅柚翡翠微糖微冰" },
+            { id: 4, date: todayDate, name: "陳春惠", meal: "2.雞腿特餐", drink: "B.紅柚翡翠微糖微冰" },
+            { id: 5, date: todayDate, name: "薛仁奇", meal: "4.叉燒特餐", drink: "B.紅柚翡翠微糖微冰" },
+            { id: 6, date: todayDate, name: "劉道鈞", meal: "3.排骨特餐", drink: "C.珍珠奶茶微糖微冰" },
+            { id: 7, date: todayDate, name: "蔡恩傑", meal: "1.總匯特餐", drink: "B.紅柚翡翠微糖微冰" },
+            { id: 8, date: todayDate, name: "李國源", meal: "5.素食", drink: "A.青四季春無糖微冰" }
         ];
 
         // GAS API 網址 (填入您部署的行事曆 App Script 網址)
@@ -608,7 +632,10 @@
 
         // Initialize state
         async function init() {
-            const savedOrders = localStorage.getItem('orderMealData_v2');
+            // Set default date filter
+            document.getElementById('dateFilter').value = todayDate;
+            
+            const savedOrders = localStorage.getItem('orderMealData_v3');
             if (savedOrders) {
                 orders = JSON.parse(savedOrders);
                 nextId = orders.length > 0 ? Math.max(...orders.map(o => parseInt(o.id))) + 1 : 1;
@@ -620,7 +647,7 @@
 
             renderTable();
             setupEventListeners();
-
+            
             // 若有設定 GAS_URL，則嘗試從遠端重新拉取資料
             if (GAS_URL) {
                 syncDataFromGAS();
@@ -645,7 +672,17 @@
 
         // Save to LocalStorage to simulate persistence
         function saveData() {
-            localStorage.setItem('orderMealData_v2', JSON.stringify(orders));
+            localStorage.setItem('orderMealData_v3', JSON.stringify(orders));
+        }
+
+        // Color helper for meal badges
+        function getMealColor(meal) {
+            if (!meal) return '';
+            if (meal.includes('雞腿')) return 'background: rgba(239, 68, 68, 0.2); color: #f87171;';
+            if (meal.includes('排骨')) return 'background: rgba(245, 158, 11, 0.2); color: #fbbf24;';
+            if (meal.includes('素食')) return 'background: rgba(16, 185, 129, 0.2); color: #34d399;';
+            if (meal.includes('叉燒')) return 'background: rgba(244, 114, 182, 0.2); color: #f472b6;';
+            return 'background: rgba(99, 102, 241, 0.2); color: #818cf8;';
         }
 
         // Render Table
@@ -653,8 +690,14 @@
             const tbody = document.getElementById('tableBody');
             const emptyState = document.getElementById('emptyState');
             tbody.innerHTML = '';
+            
+            const selectedDate = document.getElementById('dateFilter').value;
 
             const filteredOrders = orders.filter(order => {
+                // filter by date
+                if (selectedDate && order.date !== selectedDate) {
+                    return false;
+                }
                 const search = filterText.toLowerCase();
                 return order.name.toLowerCase().includes(search) ||
                        order.meal.toLowerCase().includes(search) ||
@@ -667,10 +710,12 @@
                 emptyState.style.display = 'none';
                 filteredOrders.forEach(order => {
                     const tr = document.createElement('tr');
+                    const mealStyle = getMealColor(order.meal);
                     tr.innerHTML = `
+                        <td>${order.date || '-'}</td>
                         <td>${order.id}</td>
                         <td><div style="font-weight: 500;">${order.name}</div></td>
-                        <td>${order.meal}</td>
+                        <td><span class="meal-tag" style="${mealStyle}">${order.meal}</span></td>
                         <td>${order.drink || '<span style="color: var(--text-muted)">-</span>'}</td>
                         <td class="action-cell">
                             <button class="btn btn-edit" onclick="editOrder(${order.id})">
@@ -688,10 +733,19 @@
             }
         }
 
-        // Search functionality
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            renderTable(e.target.value);
-        });
+        // Additional event listeners for setupEventListeners()
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                renderTable(e.target.value);
+            });
+            document.getElementById('dateFilter').addEventListener('change', () => {
+                renderTable(document.getElementById('searchInput').value);
+            });
+            document.getElementById('allDatesBtn').addEventListener('click', () => {
+                document.getElementById('dateFilter').value = '';
+                renderTable(document.getElementById('searchInput').value);
+            });
+        }
 
         // Modal Elements
         const modal = document.getElementById('formModal');
@@ -736,12 +790,24 @@
                 modalTitle.textContent = '新增訂單';
                 orderForm.reset();
                 document.getElementById('orderId').value = '';
+                // Default orderDate to selected date filter or today
+                const filterDate = document.getElementById('dateFilter').value;
+                document.getElementById('orderDate').value = filterDate || todayDate;
+                
                 customMealGroup.style.display = 'none';
                 customDrinkGroup.style.display = 'none';
                 customMealInput.required = false;
                 customDrinkInput.required = false;
+                document.getElementById('saveAndContinueBtn').style.display = 'inline-block';
+            } else {
+                document.getElementById('saveAndContinueBtn').style.display = 'none';
             }
             document.body.style.overflow = 'hidden';
+            
+            // Focus on name input for faster entry
+            setTimeout(() => {
+                document.getElementById('name').focus();
+            }, 100);
         }
 
         function closeModal() {
@@ -759,62 +825,81 @@
         });
 
         // Form Submit
-        orderForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        async function handleFormSubmit(isContinue = false) {
+            const id = document.getElementById('orderId').value;
+            const date = document.getElementById('orderDate').value;
+            const name = document.getElementById('name').value;
+
+            // Simple validation since form is not submitted natively if we call this directly from button click
+            if (!date || !name || !mealSelect.value) {
+                alert("請填寫必填欄位：日期、姓名、餐點");
+                return;
+            }
             
-            const submitBtn = document.getElementById('saveBtn');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '處理中...';
-            submitBtn.disabled = true;
+            let meal = mealSelect.value;
+            if (meal === '自行輸入') {
+                if (!customMealInput.value) { alert("請輸入自訂餐點"); return; }
+                meal = customMealInput.value;
+            }
+            
+            let drink = drinkSelect.value;
+            if (drink === '自行輸入') {
+                if (!customDrinkInput.value) { alert("請輸入自訂飲料"); return; }
+                drink = customDrinkInput.value;
+            }
+            if (drink === '無') drink = '';
 
-            try {
-                const id = document.getElementById('orderId').value;
-                const name = document.getElementById('name').value;
-                
-                let meal = mealSelect.value;
-                if (meal === '自行輸入') meal = customMealInput.value;
-                
-                let drink = drinkSelect.value;
-                if (drink === '自行輸入') drink = customDrinkInput.value;
-                if (drink === '無') drink = '';
+            let payload = {};
 
-                let payload = {};
-
-                if (id) {
-                    // Edit
-                    const index = orders.findIndex(o => o.id == id);
-                    if (index !== -1) {
-                        orders[index] = { ...orders[index], name, meal, drink };
-                        payload = { action: 'edit', id, name, meal, drink };
-                        alert('資料修改成功！' + (GAS_URL ? ' (同步中)' : ''));
-                    }
-                } else {
-                    // Add
-                    const newId = nextId++;
-                    orders.push({ id: newId, name, meal, drink });
-                    payload = { action: 'add', id: newId, name, meal, drink };
-                    alert('資料新增成功！' + (GAS_URL ? ' (同步中)' : ''));
+            if (id) {
+                // Edit
+                const index = orders.findIndex(o => o.id == id);
+                if (index !== -1) {
+                    orders[index] = { ...orders[index], date, name, meal, drink };
+                    payload = { action: 'edit', id, date, name, meal, drink };
+                    alert('資料修改成功！' + (GAS_URL ? ' (同步中)' : ''));
                 }
+            } else {
+                // Add
+                const newId = nextId++;
+                orders.push({ id: newId, date, name, meal, drink });
+                payload = { action: 'add', id: newId, date, name, meal, drink };
+                // Toast notification substitute simply setting timeout for aesthetics can be done 
+            }
 
-                // 本機畫面先行更新
-                saveData();
-                renderTable(document.getElementById('searchInput').value);
+            // 本機畫面先行更新
+            saveData();
+            renderTable(document.getElementById('searchInput').value);
+
+            if (GAS_URL) {
+                fetch(GAS_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(console.error);
+            }
+
+            if (isContinue && !id) {
+                // Keep modal open, reset only name to allow rapid fire entry
+                document.getElementById('name').value = '';
+                document.getElementById('name').focus();
+            } else {
                 closeModal();
+            }
+        }
 
-                // 背景發送至 GAS (使用 POST, text/plain 避免 CORS preflight 問題)
-                if (GAS_URL) {
-                    await fetch(GAS_URL, {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
-                    });
-                }
-                
-            } catch (err) {
-                console.error('儲存/同步至 GAS 發生錯誤', err);
-                alert('雖然畫面已更新，但後端同步發生錯誤，請檢查網路狀態或 GAS 網址是否正確。');
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+        orderForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleFormSubmit(false);
+        });
+        
+        document.getElementById('saveAndContinueBtn').addEventListener('click', (e) => {
+            // Need to manually check required fields since we bypass default submit via button type="button"
+            if(orderForm.checkValidity()) {
+                 handleFormSubmit(true);
+            } else {
+                 orderForm.reportValidity();
             }
         });
 
@@ -824,6 +909,7 @@
             if (!order) return;
 
             document.getElementById('orderId').value = order.id;
+            document.getElementById('orderDate').value = order.date || todayDate;
             document.getElementById('name').value = order.name;
             
             // Set Meal
@@ -878,10 +964,6 @@
                 }
             }
         };
-
-        function setupEventListeners() {
-            // Setup additional real-time validations or features here
-        }
 
         // Initialize application
         document.addEventListener('DOMContentLoaded', init);

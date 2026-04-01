@@ -10,8 +10,8 @@ function doPost(e) {
     const action = data.action;
 
     if (action === 'add') {
-      // 欄位順序: 編號(A), 姓名(B), 餐點(C), 飲料(D)
-      sheet.appendRow([data.id, data.name, data.meal, data.drink]);
+      // 欄位順序: 編號(A), 日期(B), 姓名(C), 餐點(D), 飲料(E)
+      sheet.appendRow([data.id, data.date, data.name, data.meal, data.drink]);
       return createJsonResponse({ status: 'success', message: '新增成功' });
       
     } else if (action === 'edit' || action === 'delete') {
@@ -30,10 +30,11 @@ function doPost(e) {
 
       if (rowIndex !== -1) {
         if (action === 'edit') {
-          // 更新 B, C, D 欄
-          sheet.getRange(rowIndex, 2).setValue(data.name);
-          sheet.getRange(rowIndex, 3).setValue(data.meal);
-          sheet.getRange(rowIndex, 4).setValue(data.drink);
+          // 更新 B, C, D, E 欄
+          sheet.getRange(rowIndex, 2).setValue(data.date);
+          sheet.getRange(rowIndex, 3).setValue(data.name);
+          sheet.getRange(rowIndex, 4).setValue(data.meal);
+          sheet.getRange(rowIndex, 5).setValue(data.drink);
           return createJsonResponse({ status: 'success', message: '修改成功' });
         } else if (action === 'delete') {
           sheet.deleteRow(rowIndex);
@@ -62,11 +63,22 @@ function doGet(e) {
     // 假設第一行是標題，從第二行開始讀取 (i=1)
     for (let i = 1; i < values.length; i++) {
       if (values[i][0] && String(values[i][0]).trim() !== '') {
+        // 處理日期格式
+        let dateVal = values[i][1];
+        if (dateVal instanceof Date) {
+          dateVal = Utilities.formatDate(dateVal, Session.getScriptTimeZone(), "yyyy-MM-dd");
+        } else if (dateVal) {
+          dateVal = String(dateVal).split('T')[0];
+        } else {
+          dateVal = "";
+        }
+        
         result.push({
           id: values[i][0],
-          name: values[i][1],
-          meal: values[i][2],
-          drink: values[i][3]
+          date: dateVal,
+          name: values[i][2],
+          meal: values[i][3],
+          drink: values[i][4]
         });
       }
     }
