@@ -656,12 +656,15 @@
         let nextId = 1;
         let datePicker;
         let modalDatePicker;
+        
+        // Pagination state
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 40;
 
         // Initialize state
         async function init() {
             // Set default date filter with flatpickr
             datePicker = flatpickr("#dateFilter", {
-                defaultDate: "today",
                 locale: "zh_tw"
             });
             
