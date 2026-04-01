@@ -599,23 +599,48 @@
             { id: 8, name: "李國源", meal: "5.素食", drink: "A.青四季春無糖微冰" }
         ];
 
+        // GAS API 網址 (填入您部署的行事曆 App Script 網址)
+        const GAS_URL = ''; // 範例: 'https://script.google.com/macros/s/.../exec'
+
         // State Management
         let orders = [];
         let nextId = 1;
 
         // Initialize state
-        function init() {
+        async function init() {
             const savedOrders = localStorage.getItem('orderMealData_v2');
             if (savedOrders) {
                 orders = JSON.parse(savedOrders);
-                nextId = orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 1;
+                nextId = orders.length > 0 ? Math.max(...orders.map(o => parseInt(o.id))) + 1 : 1;
             } else {
                 orders = [...initialData];
                 nextId = 9;
                 saveData();
             }
+
             renderTable();
             setupEventListeners();
+
+            // 若有設定 GAS_URL，則嘗試從遠端重新拉取資料
+            if (GAS_URL) {
+                syncDataFromGAS();
+            }
+        }
+
+        async function syncDataFromGAS() {
+            try {
+                // 注意: 這裡示範用 GET 取得資料，需要 GAS 端支援 doGet
+                const response = await fetch(`${GAS_URL}?action=read`);
+                const data = await response.json();
+                if (data && data.status === 'success' && Array.isArray(data.data)) {
+                    orders = data.data;
+                    nextId = orders.length > 0 ? Math.max(...orders.map(o => parseInt(o.id) || 0)) + 1 : 1;
+                    saveData();
+                    renderTable(document.getElementById('searchInput').value);
+                }
+            } catch (error) {
+                console.error('從 GAS 同步資料失敗:', error);
+            }
         }
 
         // Save to LocalStorage to simulate persistence
@@ -734,35 +759,63 @@
         });
 
         // Form Submit
-        orderForm.addEventListener('submit', (e) => {
+        orderForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const id = document.getElementById('orderId').value;
-            const name = document.getElementById('name').value;
-            
-            let meal = mealSelect.value;
-            if (meal === '自行輸入') meal = customMealInput.value;
-            
-            let drink = drinkSelect.value;
-            if (drink === '自行輸入') drink = customDrinkInput.value;
-            if (drink === '無') drink = '';
+            const submitBtn = document.getElementById('saveBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '處理中...';
+            submitBtn.disabled = true;
 
-            if (id) {
-                // Edit
-                const index = orders.findIndex(o => o.id == id);
-                if (index !== -1) {
-                    orders[index] = { ...orders[index], name, meal, drink };
-                    alert('資料修改成功！');
+            try {
+                const id = document.getElementById('orderId').value;
+                const name = document.getElementById('name').value;
+                
+                let meal = mealSelect.value;
+                if (meal === '自行輸入') meal = customMealInput.value;
+                
+                let drink = drinkSelect.value;
+                if (drink === '自行輸入') drink = customDrinkInput.value;
+                if (drink === '無') drink = '';
+
+                let payload = {};
+
+                if (id) {
+                    // Edit
+                    const index = orders.findIndex(o => o.id == id);
+                    if (index !== -1) {
+                        orders[index] = { ...orders[index], name, meal, drink };
+                        payload = { action: 'edit', id, name, meal, drink };
+                        alert('資料修改成功！' + (GAS_URL ? ' (同步中)' : ''));
+                    }
+                } else {
+                    // Add
+                    const newId = nextId++;
+                    orders.push({ id: newId, name, meal, drink });
+                    payload = { action: 'add', id: newId, name, meal, drink };
+                    alert('資料新增成功！' + (GAS_URL ? ' (同步中)' : ''));
                 }
-            } else {
-                // Add
-                orders.push({ id: nextId++, name, meal, drink });
-                alert('資料新增成功！');
-            }
 
-            saveData();
-            renderTable(document.getElementById('searchInput').value);
-            closeModal();
+                // 本機畫面先行更新
+                saveData();
+                renderTable(document.getElementById('searchInput').value);
+                closeModal();
+
+                // 背景發送至 GAS (使用 POST, text/plain 避免 CORS preflight 問題)
+                if (GAS_URL) {
+                    await fetch(GAS_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                }
+                
+            } catch (err) {
+                console.error('儲存/同步至 GAS 發生錯誤', err);
+                alert('雖然畫面已更新，但後端同步發生錯誤，請檢查網路狀態或 GAS 網址是否正確。');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
         });
 
         // Edit function
@@ -805,11 +858,24 @@
         };
 
         // Delete function
-        window.deleteOrder = function(id) {
+        window.deleteOrder = async function(id) {
             if (confirm('確定要刪除這筆訂單嗎？此動作無法復原。')) {
+                // 先更新本地
                 orders = orders.filter(o => o.id !== id);
                 saveData();
                 renderTable(document.getElementById('searchInput').value);
+                
+                // 再同步到 GAS
+                if (GAS_URL) {
+                    try {
+                        await fetch(GAS_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ action: 'delete', id: id })
+                        });
+                    } catch (err) {
+                        console.error('同步刪除至 GAS 失敗', err);
+                    }
+                }
             }
         };
 
