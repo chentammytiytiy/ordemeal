@@ -3,703 +3,724 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>訂餐系統後台管理 | Order Management</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>點餐系統後台管理</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #6366f1;
             --primary-hover: #4f46e5;
-            --bg-dark: #0f172a;
-            --surface: #1e293b;
-            --surface-hover: #334155;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --success: #10b981;
+            --secondary: #10b981;
+            --secondary-hover: #059669;
             --danger: #ef4444;
             --danger-hover: #dc2626;
-            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --modal-bg: rgba(15, 23, 42, 0.95);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --transition: all 0.3s ease;
         }
 
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
         body {
+            font-family: 'Noto Sans TC', sans-serif;
             background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.15), transparent 25%);
+            background-attachment: fixed;
             color: var(--text-main);
-            display: flex;
             min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
         }
 
-        /* Sidebar */
-        .sidebar {
-            width: 260px;
-            background-color: var(--surface);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 24px 0;
-            transition: all 0.3s ease;
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            padding: 0 24px 24px;
-            color: var(--primary);
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        .nav-items {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 0 16px;
-        }
-
-        .nav-item {
-            padding: 12px 16px;
-            border-radius: 8px;
-            color: var(--text-muted);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background-color: var(--primary);
-            color: #fff;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-        }
-
+        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
         }
 
-        .header-title h1 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 8px;
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #818cf8, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .header-title p {
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        .actions {
+        /* Toolbar (Search & Add) */
+        .toolbar {
             display: flex;
-            gap: 16px;
-        }
-
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
-        button:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-1px);
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
         }
 
-        button.btn-danger {
-            background-color: var(--danger);
-        }
-        button.btn-danger:hover {
-            background-color: var(--danger-hover);
-        }
-
-        button.btn-secondary {
-            background-color: var(--surface-hover);
-            color: var(--text-main);
-        }
-        button.btn-secondary:hover {
-            background-color: var(--border);
-        }
-
-        .search-bar {
-            padding: 10px 16px;
-            border-radius: 8px;
-            background-color: var(--surface);
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border-radius: 999px;
             border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
             color: var(--text-main);
-            font-size: 14px;
-            width: 300px;
-            transition: border-color 0.2s;
-        }
-
-        .search-bar:focus {
+            font-size: 1rem;
             outline: none;
-            border-color: var(--primary);
+            transition: var(--transition);
         }
 
-        /* Table Container */
-        .table-container {
-            background-color: var(--surface);
-            border-radius: 12px;
+        .search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-edit {
+            background: transparent;
+            color: #60a5fa;
+            border: 1px solid #60a5fa;
+            padding: 0.4rem 0.8rem;
+        }
+        .btn-edit:hover {
+            background: #60a5fa;
+            color: #0f172a;
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: #f87171;
+            border: 1px solid #f87171;
+            padding: 0.4rem 0.8rem;
+        }
+        .btn-delete:hover {
+            background: #f87171;
+            color: white;
+        }
+
+        /* Table Card (Glassmorphism) */
+        .table-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
             border: 1px solid var(--border);
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            animation: fadeIn 0.5s ease-out;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            text-align: left;
         }
 
         th, td {
-            padding: 16px 24px;
-            text-align: left;
+            padding: 1.2rem 1.5rem;
             border-bottom: 1px solid var(--border);
         }
 
         th {
-            background-color: rgba(255, 255, 255, 0.02);
-            font-weight: 500;
+            background: rgba(0, 0, 0, 0.2);
             color: var(--text-muted);
-            font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
+            font-size: 0.85rem;
             letter-spacing: 0.05em;
         }
 
         tbody tr {
-            transition: background-color 0.2s;
+            transition: var(--transition);
         }
 
         tbody tr:hover {
-            background-color: var(--surface-hover);
+            background: rgba(255, 255, 255, 0.03);
         }
 
-        td {
-            font-size: 14px;
-            color: var(--text-main);
+        tbody tr:last-child td {
+            border-bottom: none;
         }
 
-        .badge {
-            padding: 4px 10px;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .badge-success { background-color: rgba(16, 185, 129, 0.2); color: #34d399; }
-        .badge-warning { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-        
         .action-cell {
             display: flex;
-            gap: 8px;
+            gap: 0.5rem;
         }
 
-        .btn-icon {
-            padding: 6px;
-            background: transparent;
+        /* Empty State */
+        .empty-state {
+            padding: 3rem;
+            text-align: center;
             color: var(--text-muted);
-            border-radius: 6px;
-        }
-
-        .btn-icon:hover {
-            background-color: var(--border);
-            color: var(--text-main);
-            transform: none;
-        }
-
-        .btn-icon.delete:hover {
-            color: var(--danger);
-            background-color: rgba(239, 68, 68, 0.1);
         }
 
         /* Modal */
         .modal-overlay {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
             display: flex;
             justify-content: center;
             align-items: center;
             opacity: 0;
-            pointer-events: none;
-            transition: all 0.3s ease;
-            z-index: 50;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 100;
         }
 
         .modal-overlay.active {
             opacity: 1;
-            pointer-events: all;
+            visibility: visible;
         }
 
         .modal {
-            background-color: var(--surface);
-            border-radius: 16px;
-            width: 500px;
+            background: var(--modal-bg);
             border: 1px solid var(--border);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            transform: scale(0.95);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+            transform: translateY(-20px) scale(0.95);
+            transition: var(--transition);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
         .modal-overlay.active .modal {
-            transform: scale(1);
+            transform: translateY(0) scale(1);
         }
 
         .modal-header {
-            padding: 24px;
-            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 1.5rem;
         }
 
-        .modal-body {
-            padding: 24px;
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
         }
 
-        .modal-footer {
-            padding: 24px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
         }
 
+        .close-btn:hover {
+            color: white;
+        }
+
+        /* Form Group */
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.25rem;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
             color: var(--text-muted);
-            font-size: 14px;
         }
 
         .form-control {
             width: 100%;
-            padding: 10px 16px;
-            background-color: var(--bg-dark);
-            border: 1px solid var(--border);
+            padding: 0.75rem 1rem;
             border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
             color: var(--text-main);
-            font-size: 14px;
-            transition: border-color 0.2s;
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
         }
 
         .form-control:focus {
-            outline: none;
             border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
         }
 
         select.form-control {
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat;
-            background-position: right 16px center;
-            background-size: 16px;
+            background-position: right 1rem center;
+            background-size: 1em;
+            padding-right: 2.5rem;
         }
 
-        @keyframes fadeIn {
+        select.form-control option {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInRow {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        tbody tr {
+            animation: fadeInRow 0.3s ease forwards;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box {
+                max-width: none;
+            }
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 1rem;
+            }
+            td {
+                border: none;
+                position: relative;
+                padding-left: 50%;
+            }
+            td:before {
+                position: absolute;
+                top: 50%;
+                left: 1.5rem;
+                transform: translateY(-50%);
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                color: var(--text-muted);
+                font-size: 0.85rem;
+                font-weight: 600;
+            }
+            td:nth-of-type(1):before { content: "編號"; }
+            td:nth-of-type(2):before { content: "姓名"; }
+            td:nth-of-type(3):before { content: "餐點 (EAT)"; }
+            td:nth-of-type(4):before { content: "飲料 (DRINK)"; }
+            td:nth-of-type(5):before { content: "操作"; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="logo">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            餐飲後台
-        </div>
-        <div class="nav-items">
-            <a href="#" class="nav-item active">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                訂單管理
-            </a>
-            <a href="#" class="nav-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                系統設定
-            </a>
-        </div>
-    </div>
+    <div class="container">
+        <header class="header">
+            <h1>點餐系統後台管理</h1>
+            <div class="user-profile">
+                <span style="color: var(--text-muted); font-size: 0.9rem;">以管理員身份登入</span>
+            </div>
+        </header>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="header">
-            <div class="header-title">
-                <h1>訂單管理總覽</h1>
-                <p>管理所有員工的訂餐狀態與明細</p>
+        <div class="toolbar">
+            <div class="search-box">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="searchInput" placeholder="搜尋姓名、餐點或飲料...">
             </div>
-            <div class="actions">
-                <input type="text" id="searchInput" class="search-bar" placeholder="搜尋員工姓名...">
-                <button onclick="openModal()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    新增訂單
-                </button>
-            </div>
+            <button class="btn btn-primary" id="addBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                新增訂單
+            </button>
         </div>
 
-        <div class="table-container">
+        <div class="table-card">
             <table>
                 <thead>
                     <tr>
-                        <th>序號</th>
-                        <th>員工姓名</th>
-                        <th>餐點選擇</th>
-                        <th>飲料選擇</th>
-                        <th>備註</th>
-                        <th>動作</th>
-                        <th>狀態</th>
+                        <th>編號</th>
+                        <th>姓名</th>
+                        <th>餐點 (EAT)</th>
+                        <th>飲料 (DRINK)</th>
+                        <th>操作</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    <!-- Data rendered via JS -->
+                    <!-- Data will be populated here -->
                 </tbody>
             </table>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                找不到符合條件的資料
+            </div>
         </div>
     </div>
 
-    <!-- Modal Form -->
-    <div class="modal-overlay" id="modalOverlay">
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="formModal">
         <div class="modal">
             <div class="modal-header">
-                <h2 id="modalTitle" style="font-size: 20px; font-weight: 600;">新增訂單</h2>
-                <button class="btn-icon" onclick="closeModal()" style="padding: 4px;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+                <h2 id="modalTitle">新增訂單</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
             </div>
-            <div class="modal-body">
-                <form id="orderForm">
-                    <input type="hidden" id="editId">
-                    <div class="form-group">
-                        <label>員工姓名</label>
-                        <input type="text" id="empName" class="form-control" required placeholder="輸入員工姓名">
-                    </div>
-                    <!-- 狀態欄位由表格內下拉選單直接修改，新增表單不需填寫 -->
-                    <div class="form-group">
-                        <label>餐點選擇 (EAT)</label>
-                        <select id="mainMeal" class="form-control">
-                            <option value="">請選擇</option>
-                            <option value="1.總匯特餐">1.總匯特餐</option>
-                            <option value="2.雞腿特餐">2.雞腿特餐</option>
-                            <option value="3.排骨特餐">3.排骨特餐</option>
-                            <option value="4.叉燒特餐">4.叉燒特餐</option>
-                            <option value="5.素食">5.素食</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>飲料選擇 (DRINK)</label>
-                        <select id="drink" class="form-control">
-                            <option value="">請選擇</option>
-                            <option value="A.青四季春無糖微冰">A.青四季春無糖微冰</option>
-                            <option value="B.紅柚翡翠微糖微冰">B.紅柚翡翠微糖微冰</option>
-                            <option value="C.珍珠奶茶微糖微冰">C.珍珠奶茶微糖微冰</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>備註</label>
-                        <input type="text" id="notes" class="form-control" placeholder="輸入備註 (選填)">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeModal()">取消</button>
-                <button onclick="saveOrder()">儲存</button>
-            </div>
+            <form id="orderForm">
+                <input type="hidden" id="orderId">
+                <div class="form-group">
+                    <label for="name">姓名</label>
+                    <input type="text" id="name" class="form-control" required placeholder="請輸入姓名">
+                </div>
+                <div class="form-group">
+                    <label for="meal">餐點 (EAT)</label>
+                    <select id="meal" class="form-control" required>
+                        <option value="" disabled selected>請選擇餐點</option>
+                        <option value="1.總匯特餐">1.總匯特餐</option>
+                        <option value="2.雞腿特餐">2.雞腿特餐</option>
+                        <option value="3.排骨特餐">3.排骨特餐</option>
+                        <option value="4.叉燒特餐">4.叉燒特餐</option>
+                        <option value="5.素食">5.素食</option>
+                        <option value="自行輸入">其他 (自行輸入)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="customMealGroup" style="display: none;">
+                    <label for="customMeal">自訂餐點</label>
+                    <input type="text" id="customMeal" class="form-control" placeholder="輸入其他餐點">
+                </div>
+                <div class="form-group">
+                    <label for="drink">飲料 (DRINK)</label>
+                    <select id="drink" class="form-control">
+                        <option value="" disabled selected>請選擇飲料 (非必填)</option>
+                        <option value="A.青四季春無糖微冰">A.青四季春無糖微冰</option>
+                        <option value="B.紅柚翡翠微糖微冰">B.紅柚翡翠微糖微冰</option>
+                        <option value="C.珍珠奶茶微糖微冰">C.珍珠奶茶微糖微冰</option>
+                        <option value="無">無</option>
+                        <option value="自行輸入">其他 (自行輸入)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="customDrinkGroup" style="display: none;">
+                    <label for="customDrink">自訂飲料</label>
+                    <input type="text" id="customDrink" class="form-control" placeholder="輸入其他飲料">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">儲存</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        // 【重要】請將下方的 GAS_URL 替換為您部署的 Google Apps Script (Web App) 網址
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyuSoD2WhNAamQ_VdL6jIf4mCsY4gapEdMDAMwnFjOndKiPLcm22Gb6FAoN9rAX0bztyg/exec'; 
+        // Initial Mock Data from Google Sheet
+        const initialData = [
+            { id: 1, name: "高念平", meal: "3.排骨特餐", drink: "A.青四季春無糖微冰" },
+            { id: 2, name: "游國楷", meal: "3.排骨特餐", drink: "C.珍珠奶茶微糖微冰" },
+            { id: 3, name: "謝楷評", meal: "2.雞腿特餐", drink: "B.紅柚翡翠微糖微冰" },
+            { id: 4, name: "陳春惠", meal: "2.雞腿特餐", drink: "B.紅柚翡翠微糖微冰" },
+            { id: 5, name: "薛仁奇", meal: "4.叉燒特餐", drink: "B.紅柚翡翠微糖微冰" },
+            { id: 6, name: "劉道鈞", meal: "3.排骨特餐", drink: "C.珍珠奶茶微糖微冰" },
+            { id: 7, name: "蔡恩傑", meal: "1.總匯特餐", drink: "B.紅柚翡翠微糖微冰" },
+            { id: 8, name: "李國源", meal: "5.素食", drink: "A.青四季春無糖微冰" }
+        ];
 
+        // State Management
         let orders = [];
+        let nextId = 1;
 
-        // 讀取遠端資料
-        async function fetchOrders() {
-            const tbody = document.getElementById('tableBody');
-            
-            if (!GAS_URL) {
-                console.warn('請設定 GAS_URL。目前進入測試模式');
-                orders = [
-                    { id: '1', name: '高念平', status: 'OK', meal: '原味椒鹽炸雞霸氣會議餐盒', drink: '原片初露青茶         無糖微冰', notes: '冬天不洗澡也要洗衣服吧' }
-                ];
-                renderTable();
-                return;
+        // Initialize state
+        function init() {
+            const savedOrders = localStorage.getItem('orderMealData_v2');
+            if (savedOrders) {
+                orders = JSON.parse(savedOrders);
+                nextId = orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 1;
+            } else {
+                orders = [...initialData];
+                nextId = 9;
+                saveData();
             }
-
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">資料同步中，請稍候...</td></tr>`;
-            
-            try {
-                const response = await fetch(GAS_URL + '?action=read', {
-                    method: 'GET',
-                    redirect: 'follow'
-                });
-                
-                const rawText = await response.text();
-
-                try {
-                    const result = JSON.parse(rawText);
-                    if (result.status === 'success') {
-                        orders = result.data;
-                        renderTable();
-                    } else {
-                        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 40px;">讀取失敗：${result.message}</td></tr>`;
-                        alert('資料讀取失敗：' + result.message);
-                    }
-                } catch(e) {
-                    console.error("無法解析的內容:", rawText);
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 40px;">GAS 回傳了非 JSON 內容。<br>請確認發佈 Apps Script 的「誰可以存取」是否設定為<b>「所有人 (Anyone)」</b>。<br>(如果跳出登入畫面會被當成錯誤阻擋)</td></tr>`;
-                }
-
-            } catch (err) {
-                console.error(err);
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 40px;">阻擋跨域請求 (CORS) 或網路錯誤。<br>請確認佈署 Apps Script 時「誰可以存取(Who has access)」設定為<b>「所有人(Anyone)」</b>。</td></tr>`;
-            }
+            renderTable();
+            setupEventListeners();
         }
 
-        // 呈現表格
-        function renderTable(data = orders) {
+        // Save to LocalStorage to simulate persistence
+        function saveData() {
+            localStorage.setItem('orderMealData_v2', JSON.stringify(orders));
+        }
+
+        // Render Table
+        function renderTable(filterText = '') {
             const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
             tbody.innerHTML = '';
 
-            if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">目前尚無訂單資料</td></tr>`;
-                return;
-            }
-
-            data.forEach((order) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${order.id}</td>
-                    <td style="font-weight: 500;">${order.name}</td>
-                    <td>${order.meal || '-'}</td>
-                    <td>${order.drink || '-'}</td>
-                    <td style="color: var(--text-muted); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${order.notes}">
-                        ${order.notes || '-'}
-                    </td>
-                    <td class="action-cell">
-                        <button class="btn-icon" onclick="editOrder('${order.id}')" title="編輯">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </button>
-                        <button class="btn-icon delete" onclick="deleteOrder('${order.id}')" title="刪除">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                    </td>
-                    <td>
-                        <select class="form-control" onchange="changeStatus('${order.id}', this.value)" style="width: 100px; padding: 6px; font-size: 13px; font-weight: 600; text-align: center; border-radius: 9999px; background-color: ${order.status === 'OK' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)'}; color: ${order.status === 'OK' ? '#34d399' : '#fbbf24'}; border-color: transparent; cursor: pointer;">
-                            <option value="Pending" ${order.status !== 'OK' ? 'selected' : ''} style="color: #000;">Pending</option>
-                            <option value="OK" ${order.status === 'OK' ? 'selected' : ''} style="color: #000;">OK</option>
-                        </select>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+            const filteredOrders = orders.filter(order => {
+                const search = filterText.toLowerCase();
+                return order.name.toLowerCase().includes(search) ||
+                       order.meal.toLowerCase().includes(search) ||
+                       (order.drink && order.drink.toLowerCase().includes(search));
             });
+
+            if (filteredOrders.length === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                filteredOrders.forEach(order => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${order.id}</td>
+                        <td><div style="font-weight: 500;">${order.name}</div></td>
+                        <td>${order.meal}</td>
+                        <td>${order.drink || '<span style="color: var(--text-muted)">-</span>'}</td>
+                        <td class="action-cell">
+                            <button class="btn btn-edit" onclick="editOrder(${order.id})">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                編輯
+                            </button>
+                            <button class="btn btn-delete" onclick="deleteOrder(${order.id})">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                刪除
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
         }
 
-        // 搜尋功能
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase();
-            const filtered = orders.filter(order => (order.name || '').toLowerCase().includes(term));
-            renderTable(filtered);
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            renderTable(e.target.value);
         });
 
-        // 彈出視窗管理
-        const modal = document.getElementById('modalOverlay');
-        const form = document.getElementById('orderForm');
+        // Modal Elements
+        const modal = document.getElementById('formModal');
+        const orderForm = document.getElementById('orderForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const addBtn = document.getElementById('addBtn');
+        const closeBtn = document.getElementById('closeModalBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
 
-        function openModal() {
-            document.getElementById('editId').value = '';
-            document.getElementById('modalTitle').textContent = '新增訂單';
-            form.reset();
+        // Custom Input Toggles
+        const mealSelect = document.getElementById('meal');
+        const customMealGroup = document.getElementById('customMealGroup');
+        const customMealInput = document.getElementById('customMeal');
+
+        const drinkSelect = document.getElementById('drink');
+        const customDrinkGroup = document.getElementById('customDrinkGroup');
+        const customDrinkInput = document.getElementById('customDrink');
+
+        mealSelect.addEventListener('change', (e) => {
+            if (e.target.value === '自行輸入') {
+                customMealGroup.style.display = 'block';
+                customMealInput.required = true;
+            } else {
+                customMealGroup.style.display = 'none';
+                customMealInput.required = false;
+            }
+        });
+
+        drinkSelect.addEventListener('change', (e) => {
+            if (e.target.value === '自行輸入') {
+                customDrinkGroup.style.display = 'block';
+                customDrinkInput.required = true;
+            } else {
+                customDrinkGroup.style.display = 'none';
+                customDrinkInput.required = false;
+            }
+        });
+
+        function openModal(isEdit = false) {
             modal.classList.add('active');
+            if (!isEdit) {
+                modalTitle.textContent = '新增訂單';
+                orderForm.reset();
+                document.getElementById('orderId').value = '';
+                customMealGroup.style.display = 'none';
+                customDrinkGroup.style.display = 'none';
+                customMealInput.required = false;
+                customDrinkInput.required = false;
+            }
+            document.body.style.overflow = 'hidden';
         }
 
         function closeModal() {
             modal.classList.remove('active');
-            setTimeout(() => form.reset(), 300);
+            document.body.style.overflow = 'auto';
         }
 
-        // 新增與更新訂單至 GAS
-        async function saveOrder() {
-            const id = document.getElementById('editId').value;
-            const name = document.getElementById('empName').value.trim();
-            const meal = document.getElementById('mainMeal').value;
-            const drink = document.getElementById('drink').value;
-            const notes = document.getElementById('notes').value.trim();
+        addBtn.addEventListener('click', () => openModal(false));
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
 
-            let status = 'Pending';
+        // Close on outside click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Form Submit
+        orderForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('orderId').value;
+            const name = document.getElementById('name').value;
+            
+            let meal = mealSelect.value;
+            if (meal === '自行輸入') meal = customMealInput.value;
+            
+            let drink = drinkSelect.value;
+            if (drink === '自行輸入') drink = customDrinkInput.value;
+            if (drink === '無') drink = '';
+
             if (id) {
-                const existing = orders.find(o => String(o.id) === String(id));
-                if (existing) status = existing.status;
-            }
-
-            if (!name) return alert('請輸入員工姓名');
-            if (!GAS_URL) return alert('GAS_URL 未設定');
-
-            const payload = {
-                action: id ? 'update' : 'create',
-                id: id,
-                data: { name, status, meal, drink, notes }
-            };
-
-            try {
-                const submitBtn = event.target;
-                const originalText = submitBtn.innerText;
-                submitBtn.innerText = '儲存中...';
-                submitBtn.disabled = true;
-
-                const res = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload),
-                    redirect: 'follow'
-                });
-                
-                const rawText = await res.text();
-                submitBtn.innerText = originalText;
-                submitBtn.disabled = false;
-
-                try {
-                    const result = JSON.parse(rawText);
-                    if (result.status === 'success') {
-                        closeModal();
-                        await fetchOrders();
-                        document.getElementById('searchInput').dispatchEvent(new Event('input'));
-                    } else {
-                        alert('儲存失敗：' + result.message);
-                    }
-                } catch(err) {
-                    console.error("無法解析儲存回傳", rawText);
-                    alert("更新時遭阻擋，請確認 GAS 權限必須為「所有人 (Anyone)」！");
+                // Edit
+                const index = orders.findIndex(o => o.id == id);
+                if (index !== -1) {
+                    orders[index] = { ...orders[index], name, meal, drink };
+                    alert('資料修改成功！');
                 }
-            } catch(e) {
-                alert('系統錯誤或 CORS 問題，儲存失敗。');
+            } else {
+                // Add
+                orders.push({ id: nextId++, name, meal, drink });
+                alert('資料新增成功！');
             }
-        }
 
-        // 彈出編輯視窗
-        function editOrder(id) {
-            const order = orders.find(o => String(o.id) === String(id));
+            saveData();
+            renderTable(document.getElementById('searchInput').value);
+            closeModal();
+        });
+
+        // Edit function
+        window.editOrder = function(id) {
+            const order = orders.find(o => o.id === id);
             if (!order) return;
 
-            document.getElementById('editId').value = order.id;
-            document.getElementById('modalTitle').textContent = '修改訂單';
-            document.getElementById('empName').value = order.name;
+            document.getElementById('orderId').value = order.id;
+            document.getElementById('name').value = order.name;
             
-            const mealOpts = document.getElementById('mainMeal').options;
-            for(let opt of mealOpts) if(order.meal===opt.value) document.getElementById('mainMeal').value = opt.value;
-            
-            const drinkOpts = document.getElementById('drink').options;
-            for(let opt of drinkOpts) if(order.drink===opt.value) document.getElementById('drink').value = opt.value;
-            
-            document.getElementById('notes').value = order.notes;
-
-            modal.classList.add('active');
-        }
-
-        // 直接從表格改變狀態
-        async function changeStatus(id, newStatus) {
-            const order = orders.find(o => String(o.id) === String(id));
-            if (!order || !GAS_URL) return;
-
-            const payload = {
-                action: 'update',
-                id: id,
-                data: {
-                    name: order.name,
-                    status: newStatus,
-                    meal: order.meal || '',
-                    drink: order.drink || '',
-                    notes: order.notes || ''
-                }
-            };
-            
-            try {
-                const res = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload),
-                    redirect: 'follow'
-                });
-                const raw = await res.text();
-                const result = JSON.parse(raw);
-                if (result.status === 'success') {
-                    // updated successfully
-                    await fetchOrders(); 
-                } else {
-                    alert('狀態更新失敗：' + result.message);
-                    renderTable(); // reset visually
-                }
-            } catch (err) {
-                alert('狀態更新發生網路錯誤');
-                renderTable(); // reset visually
+            // Set Meal
+            const mealOptions = Array.from(mealSelect.options).map(o => o.value);
+            if (mealOptions.includes(order.meal)) {
+                mealSelect.value = order.meal;
+                customMealGroup.style.display = 'none';
+                customMealInput.required = false;
+            } else {
+                mealSelect.value = '自行輸入';
+                customMealGroup.style.display = 'block';
+                customMealInput.required = true;
+                customMealInput.value = order.meal;
             }
-        }
 
-        // 刪除訂單透過 GAS
-        async function deleteOrder(id) {
-            if (!confirm('確定要刪除這筆訂單嗎？（此動作將直接刪除 Google Sheet 上的資料）')) return;
-            if (!GAS_URL) return;
-
-            try {
-                const res = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'delete', id: id }),
-                    redirect: 'follow'
-                });
-                
-                const rawText = await res.text();
-                try {
-                    const result = JSON.parse(rawText);
-                    if (result.status === 'success') {
-                        await fetchOrders();
-                        document.getElementById('searchInput').dispatchEvent(new Event('input'));
-                    } else {
-                        alert('刪除失敗：' + result.message);
-                    }
-                } catch(err) {
-                    alert('刪除失敗，回傳資料格式錯誤 (權限不足)。');
-                }
-            } catch(e) {
-                alert('刪除發生網路錯誤或 CORS 問題。');
+            // Set Drink
+            const drinkVal = order.drink || '無';
+            const drinkOptions = Array.from(drinkSelect.options).map(o => o.value);
+            if (drinkOptions.includes(drinkVal)) {
+                drinkSelect.value = drinkVal;
+                customDrinkGroup.style.display = 'none';
+                customDrinkInput.required = false;
+            } else {
+                drinkSelect.value = '自行輸入';
+                customDrinkGroup.style.display = 'block';
+                customDrinkInput.required = true;
+                customDrinkInput.value = order.drink;
             }
+
+            modalTitle.textContent = '編輯訂單 (編號: ' + order.id + ')';
+            openModal(true);
+        };
+
+        // Delete function
+        window.deleteOrder = function(id) {
+            if (confirm('確定要刪除這筆訂單嗎？此動作無法復原。')) {
+                orders = orders.filter(o => o.id !== id);
+                saveData();
+                renderTable(document.getElementById('searchInput').value);
+            }
+        };
+
+        function setupEventListeners() {
+            // Setup additional real-time validations or features here
         }
 
-        // 初始化
-        fetchOrders();
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', init);
+
     </script>
 </body>
 </html>
