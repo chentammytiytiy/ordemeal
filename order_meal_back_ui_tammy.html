@@ -376,11 +376,11 @@
                     <tr>
                         <th>序號</th>
                         <th>員工姓名</th>
-                        <th>狀態</th>
                         <th>餐點選擇</th>
                         <th>飲料選擇</th>
                         <th>備註</th>
                         <th>動作</th>
+                        <th>狀態</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -406,13 +406,7 @@
                         <label>員工姓名</label>
                         <input type="text" id="empName" class="form-control" required placeholder="輸入員工姓名">
                     </div>
-                    <div class="form-group">
-                        <label>狀態</label>
-                        <select id="status" class="form-control">
-                            <option value="OK">OK</option>
-                            <option value="Pending">Pending</option>
-                        </select>
-                    </div>
+                    <!-- 狀態欄位由表格內下拉選單直接修改，新增表單不需填寫 -->
                     <div class="form-group">
                         <label>餐點選擇</label>
                         <select id="mainMeal" class="form-control">
@@ -506,13 +500,10 @@
             }
 
             data.forEach((order) => {
-                const statusBadge = order.status === 'OK' ? 'badge-success' : 'badge-warning';
-                
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${order.id}</td>
                     <td style="font-weight: 500;">${order.name}</td>
-                    <td><span class="badge ${statusBadge}">${order.status}</span></td>
                     <td>${order.meal || '-'}</td>
                     <td>${order.drink || '-'}</td>
                     <td style="color: var(--text-muted); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${order.notes}">
@@ -525,6 +516,12 @@
                         <button class="btn-icon delete" onclick="deleteOrder('${order.id}')" title="刪除">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
+                    </td>
+                    <td>
+                        <select class="form-control" onchange="changeStatus('${order.id}', this.value)" style="width: 100px; padding: 6px; font-size: 13px; font-weight: 600; text-align: center; border-radius: 9999px; background-color: ${order.status === 'OK' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)'}; color: ${order.status === 'OK' ? '#34d399' : '#fbbf24'}; border-color: transparent; cursor: pointer;">
+                            <option value="Pending" ${order.status !== 'OK' ? 'selected' : ''} style="color: #000;">Pending</option>
+                            <option value="OK" ${order.status === 'OK' ? 'selected' : ''} style="color: #000;">OK</option>
+                        </select>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -558,10 +555,15 @@
         async function saveOrder() {
             const id = document.getElementById('editId').value;
             const name = document.getElementById('empName').value.trim();
-            const status = document.getElementById('status').value;
             const meal = document.getElementById('mainMeal').value;
             const drink = document.getElementById('drink').value;
             const notes = document.getElementById('notes').value.trim();
+
+            let status = 'Pending';
+            if (id) {
+                const existing = orders.find(o => String(o.id) === String(id));
+                if (existing) status = existing.status;
+            }
 
             if (!name) return alert('請輸入員工姓名');
             if (!GAS_URL) return alert('GAS_URL 未設定');
@@ -615,7 +617,6 @@
             document.getElementById('editId').value = order.id;
             document.getElementById('modalTitle').textContent = '修改訂單';
             document.getElementById('empName').value = order.name;
-            document.getElementById('status').value = order.status;
             
             const mealOpts = document.getElementById('mainMeal').options;
             for(let opt of mealOpts) if(order.meal===opt.value) document.getElementById('mainMeal').value = opt.value;
@@ -626,6 +627,45 @@
             document.getElementById('notes').value = order.notes;
 
             modal.classList.add('active');
+        }
+
+        // 直接從表格改變狀態
+        async function changeStatus(id, newStatus) {
+            const order = orders.find(o => String(o.id) === String(id));
+            if (!order || !GAS_URL) return;
+
+            const payload = {
+                action: 'update',
+                id: id,
+                data: {
+                    name: order.name,
+                    status: newStatus,
+                    meal: order.meal || '',
+                    drink: order.drink || '',
+                    notes: order.notes || ''
+                }
+            };
+            
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload),
+                    redirect: 'follow'
+                });
+                const raw = await res.text();
+                const result = JSON.parse(raw);
+                if (result.status === 'success') {
+                    // updated successfully
+                    await fetchOrders(); 
+                } else {
+                    alert('狀態更新失敗：' + result.message);
+                    renderTable(); // reset visually
+                }
+            } catch (err) {
+                alert('狀態更新發生網路錯誤');
+                renderTable(); // reset visually
+            }
         }
 
         // 刪除訂單透過 GAS
