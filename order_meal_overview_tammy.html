@@ -407,8 +407,9 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/zh-tw.js"></script>
     <script>
-        // 設定與點餐系統相同的 GAS API 網址，確保抓到最新資料
+        // 設定與點餐系統相同的 GAS API 網址，確保寫入資料
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwaWwvuxfXH8z2ARI-x4JMmSpRPnG_m8PEyGqpen6e0Q9_U8B85SJdIRV3UGdj8bD-T/exec';
+        const SHEET_ID = '1VOufUmfDeufKGmk0A053PnCWpO7Mt_0xhuI3-eCTJII';
 
         let globalOrders = [];
 
@@ -496,29 +497,40 @@
                 renderStats();
             }
 
-            // 若有設定 GAS_URL，則嘗試從遠端重新拉取最新資料更新畫面
-            if (GAS_URL) {
+            // 若有設定 SHEET_ID，則嘗試從遠端重拉最新資料更新畫面 (直接抓取 Sheet JSON 不受 GAS 限制)
+            if (SHEET_ID) {
                 try {
-                    const response = await fetch(`${GAS_URL}?action=read`);
-                    const data = await response.json();
-                    if (data && data.status === 'success' && Array.isArray(data.data)) {
-                        globalOrders = data.data.map(o => {
-                            let d = todayDate; // Fallback to todayDate instead of empty string
-                            if (o.date) {
-                                const parsed = new Date(o.date);
-                                if (!isNaN(parsed) && parsed.getFullYear() > 2000) {
-                                    d = parsed.getFullYear() + '-' + String(parsed.getMonth() + 1).padStart(2, '0') + '-' + String(parsed.getDate()).padStart(2, '0');
-                                } else {
-                                    d = String(o.date).replace(/\//g, '-').split('T')[0];
+                    const response = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
+                    const text = await response.text();
+                    const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                    const data = JSON.parse(jsonString);
+
+                    if (data && data.table && data.table.rows) {
+                        globalOrders = data.table.rows.map(row => {
+                            const r = row.c;
+                            let d = todayDate;
+                            if (r[1] && r[1].f) {
+                                d = String(r[1].f).replace(/\//g, '-');
+                            } else if (r[1] && r[1].v) {
+                                const match = String(r[1].v).match(/Date\((\d+),(\d+),(\d+)/);
+                                if (match) {
+                                    d = match[1] + '-' + String(parseInt(match[2]) + 1).padStart(2, '0') + '-' + String(match[3]).padStart(2, '0');
                                 }
                             }
-                            return { ...o, date: d };
-                        });
+                            return {
+                                id: r[0] ? (r[0].v || r[0].f) : '',
+                                date: d,
+                                name: r[2] && r[2].v ? r[2].v : '',
+                                meal: r[3] && r[3].v ? r[3].v : '',
+                                drink: r[4] && r[4].v ? r[4].v : ''
+                            };
+                        }).filter(o => o.id && String(o.id).trim() !== '');
+
                         localStorage.setItem('orderMealData_v3', JSON.stringify(globalOrders));
                         renderStats(); // 重繪 UI 最新資料
                     }
                 } catch (error) {
-                    console.error('從 GAS 同步資料失敗:', error);
+                    console.error('從 Sheet 同步資料失敗:', error);
                 }
             }
             

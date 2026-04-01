@@ -630,7 +630,8 @@
 
         // GAS API 網址 (填入您部署的行事曆 App Script 網址)
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwaWwvuxfXH8z2ARI-x4JMmSpRPnG_m8PEyGqpen6e0Q9_U8B85SJdIRV3UGdj8bD-T/exec'; // 範例: 'https://script.google.com/macros/s/.../exec'
-
+        const SHEET_ID = '1VOufUmfDeufKGmk0A053PnCWpO7Mt_0xhuI3-eCTJII';
+        
         // State Management
         let orders = [];
         let nextId = 1;
@@ -671,28 +672,40 @@
 
         async function syncDataFromGAS() {
             try {
-                // 注意: 這裡示範用 GET 取得資料，需要 GAS 端支援 doGet
-                const response = await fetch(`${GAS_URL}?action=read`);
-                const data = await response.json();
-                if (data && data.status === 'success' && Array.isArray(data.data)) {
-                    orders = data.data.map(o => {
-                        let d = todayDate; // Fallback to todayDate instead of empty string
-                        if (o.date) {
-                            const parsed = new Date(o.date);
-                            if (!isNaN(parsed) && parsed.getFullYear() > 2000) {
-                                d = parsed.getFullYear() + '-' + String(parsed.getMonth() + 1).padStart(2, '0') + '-' + String(parsed.getDate()).padStart(2, '0');
-                            } else {
-                                d = String(o.date).replace(/\//g, '-').split('T')[0];
+                // 直接讀取 Google Sheets 公開 JSON (避免 GAS Cache 或未部署問題)
+                const response = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
+                const text = await response.text();
+                // 解析 Google Visualization 的 JSON 格式
+                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonString);
+
+                if (data && data.table && data.table.rows) {
+                    orders = data.table.rows.map(row => {
+                        const r = row.c;
+                        let d = todayDate;
+                        if (r[1] && r[1].f) {
+                            d = String(r[1].f).replace(/\//g, '-');
+                        } else if (r[1] && r[1].v) {
+                            const match = String(r[1].v).match(/Date\((\d+),(\d+),(\d+)/);
+                            if (match) {
+                                d = match[1] + '-' + String(parseInt(match[2]) + 1).padStart(2, '0') + '-' + String(match[3]).padStart(2, '0');
                             }
                         }
-                        return { ...o, date: d };
-                    });
+                        return {
+                            id: r[0] ? (r[0].v || r[0].f) : '',
+                            date: d,
+                            name: r[2] && r[2].v ? r[2].v : '',
+                            meal: r[3] && r[3].v ? r[3].v : '',
+                            drink: r[4] && r[4].v ? r[4].v : ''
+                        };
+                    }).filter(o => o.id && String(o.id).trim() !== '');
+
                     nextId = orders.length > 0 ? Math.max(...orders.map(o => parseInt(o.id) || 0)) + 1 : 1;
                     saveData();
                     renderTable(document.getElementById('searchInput').value);
                 }
             } catch (error) {
-                console.error('從 GAS 同步資料失敗:', error);
+                console.error('從 Sheet 同步資料失敗:', error);
             }
         }
 

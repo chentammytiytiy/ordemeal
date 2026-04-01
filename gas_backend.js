@@ -67,8 +67,17 @@ function doGet(e) {
         let dateVal = values[i][1];
         if (dateVal instanceof Date) {
           dateVal = Utilities.formatDate(dateVal, Session.getScriptTimeZone(), "yyyy-MM-dd");
-        } else if (dateVal) {
-          dateVal = String(dateVal).split('T')[0];
+        } else if (dateVal !== "" && dateVal != null) {
+          // 嘗試手動轉換為 Date 物件
+          const parsed = new Date(dateVal);
+          if (!isNaN(parsed)) {
+            const y = parsed.getFullYear();
+            const m = String(parsed.getMonth() + 1).padStart(2, '0');
+            const d = String(parsed.getDate()).padStart(2, '0');
+            dateVal = y + "-" + m + "-" + d;
+          } else {
+            dateVal = String(dateVal).split('T')[0];
+          }
         } else {
           dateVal = "";
         }
