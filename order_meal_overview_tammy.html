@@ -480,9 +480,8 @@
 
         // Initialize dashboard statistics
         async function initDashboard() {
-            // Set default date to today using flatpickr
+            // Set default date using flatpickr
             datePicker = flatpickr("#dateFilter", {
-                defaultDate: "today",
                 locale: "zh_tw",
                 onChange: renderStats
             });
